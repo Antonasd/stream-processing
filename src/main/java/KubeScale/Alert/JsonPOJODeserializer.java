@@ -1,3 +1,4 @@
+package KubeScale.Alert;
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -22,7 +23,7 @@ import org.apache.kafka.common.serialization.Serializer;
 
 import java.util.Map;
 
-public class JsonPOJODeserializer<T> implements Deserializer<T>, Serializer<T> {
+public class JsonPOJODeserializer<T> implements  Deserializer<T> {
     private ObjectMapper objectMapper = new ObjectMapper();
 
     private Class<T> tClass;
@@ -59,14 +60,5 @@ public class JsonPOJODeserializer<T> implements Deserializer<T>, Serializer<T> {
 
     }
 
-	@Override
-	public byte[] serialize(String topic, T data) {
-        if (data == null)
-            return null;
-        try {
-            return objectMapper.writeValueAsBytes(data);
-        } catch (Exception e) {
-            throw new SerializationException("Error serializing JSON message", e);
-        }
-	}
+
 }

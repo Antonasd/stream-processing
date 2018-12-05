@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.time.Duration;
 import java.util.Stack;
+import java.util.concurrent.CountDownLatch;
+
 import javafx.util.Pair;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -44,6 +46,8 @@ public class StreamsTest {
 	
 	final static Long ALERT_THRESHOLD = 50L;
 	
+	public final static Integer LEVEL_ERROR = 4;
+	public final static Integer LEVEL_INFO = 1;
 	public static void main(String[] args) {
 		
 	    Map<String, Object> serdeProps = new HashMap<>();
@@ -62,16 +66,18 @@ public class StreamsTest {
         
 		Properties props = new Properties();
 		props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test_stream");
-		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "druid-kafka:29092");
+		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "130.240.200.49:9092");
 		props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.Long().getClass().getName());
 		props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.Long().getClass().getName());
 		
 		StreamsBuilder builder = new StreamsBuilder();
-		KStream<Long, TwampData> source = builder.stream("twamp", Consumed.with(Serdes.Long(), twampSerde));
-		constructDelayAlert(source);
+		KStream<String, TwampData> source = builder.stream("twamp", Consumed.with(Serdes.String(), twampSerde));
+		
+		AverageDelayAlert avgDelayAlert = new AverageDelayAlert(50.0, 15, 8);
+		avgDelayAlert.buildAverageDelayAlert(source);
 		
 		
-		TopologyTestDriver testDriver = new TopologyTestDriver(builder.build(), props);
+		/*TopologyTestDriver testDriver = new TopologyTestDriver(builder.build(), props);
 		
 		final Serializer<TwampData> twampSerializerTest = new JsonPOJOSerializer<>();
         serdeProps.put("JsonPOJOClass", TwampData.class);
@@ -93,7 +99,14 @@ public class StreamsTest {
 		testInput.add(record);
 		
 		testDriver.pipeInput(testInput);
-		testDriver.close();
+		testDriver.close();*/
+		KafkaStreams streams = new KafkaStreams(builder.build(), props);
+        final CountDownLatch latch = new CountDownLatch(1);
+        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
+        streams.cleanUp(); // dev only
+        streams.start();
+		
+		
 	}
 	
 	static void constructDelayAlert(KStream<Long, TwampData> source){

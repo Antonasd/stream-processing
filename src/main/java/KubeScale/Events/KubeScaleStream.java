@@ -1,15 +1,24 @@
 package KubeScale.Events;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.Serializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.test.ConsumerRecordFactory;
+
 
 public class KubeScaleStream {
 	public static void main(String[] args) {
@@ -28,11 +37,16 @@ public class KubeScaleStream {
 				int n = 0;
 				Iterator<TwampData> iterator= value.iterator();
 				while(iterator.hasNext()) {
-					if(100L-iterator.next().es <= 95L) n++;
+					Long es = iterator.next().es;
+					System.out.println(es);
+					if(100L-es <= 100L) n++;
 				}
 				return n >= 12;
 			},
 			"events");
+		slaEvent.setCategory("sla");
+		slaEvent.setThresholdExceedMessage("SLA threshold exceeded!");
+		slaEvent.setBelowThreholdMessage("SLA is now below 95%");
 		slaEvent.build();
 		
 		EventBuilder<Double> delayEvent = new EventBuilder<Double>(source, 50.0, 
@@ -40,7 +54,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().davg <= 50.0) n++;
+						if(iterator.next().davg >= 50.0) n++;
 					}
 					return n >= 12;
 				},
@@ -55,7 +69,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().rate >= 50.0) n++;
+						if(iterator.next().rate <= 50.0) n++;
 					}
 					return n >= 12;
 				},
@@ -70,7 +84,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().davg_far <= 50.0) n++;
+						if(iterator.next().davg_far >= 50.0) n++;
 					}
 					return n >= 12;
 				},
@@ -85,7 +99,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().loss_far <= 60L) n++;
+						if(iterator.next().loss_far >= 60L) n++;
 					}
 					return n >= 12;
 				},
@@ -100,7 +114,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().loss_far <= 20L) n++;
+						if(iterator.next().loss_far >= 20L) n++;
 					}
 					return n >= 12;
 				},
@@ -115,7 +129,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().davg_near <= 50.0) n++;
+						if(iterator.next().davg_near >= 50.0) n++;
 					}
 					return n >= 12;
 				},
@@ -130,7 +144,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().loss_far <= 60L) n++;
+						if(iterator.next().loss_far >= 60L) n++;
 					}
 					return n >= 12;
 				},
@@ -145,7 +159,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().loss_far <= 20L) n++;
+						if(iterator.next().loss_far >= 20L) n++;
 					}
 					return n >= 12;
 				},
@@ -155,11 +169,43 @@ public class KubeScaleStream {
 		misoNearEvent.setBelowThreholdMessage("The number of missordered packets at the near end is now below the threshold");
 		misoNearEvent.build();
 		
+		//test(builder, props);
+		
 		KafkaStreams streams = new KafkaStreams(builder.build(), props);
         final CountDownLatch latch = new CountDownLatch(1);
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
         streams.cleanUp(); // dev only
         streams.start();
 		
+	}
+	
+	public static void test(StreamsBuilder builder, Properties props) {
+		Map<String, Object> serdeProps = new HashMap<>();
+		TopologyTestDriver testDriver = new TopologyTestDriver(builder.build(), props);
+		
+		final Serializer<TwampData> twampSerializerTest = new JsonPOJOSerializer<>();
+        serdeProps.put("JsonPOJOClass", TwampData.class);
+        twampSerializerTest.configure(serdeProps, false);
+        
+		ConsumerRecordFactory<String, TwampData> testFactory = new ConsumerRecordFactory<>("twamp", new StringSerializer(), twampSerializerTest);
+		
+		ArrayList<ConsumerRecord<byte[],byte[]>> testInput = new ArrayList<ConsumerRecord<byte[],byte[]>>();
+		for(int i = 0; i<50; i++) {
+			TwampData testData = new TwampData();
+			testData.es = 60L;
+			ConsumerRecord<byte[], byte[]> record = testFactory.create(testData);
+			testInput.add(record);
+		}
+		
+		for(int i = 0; i<50; i++) {
+			TwampData testData = new TwampData();
+			testData.es = 20L;
+			ConsumerRecord<byte[], byte[]> record = testFactory.create(testData);
+			testInput.add(record);
+		}
+		
+		
+		testDriver.pipeInput(testInput);
+		testDriver.close();
 	}
 }

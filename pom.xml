@@ -16,6 +16,7 @@
                     <source>1.8</source>
                     <target>1.8</target>
                     <manifest>
+                    	<addClassPath>true</addClassPath>
                     	<mainClass>KubeScale.Events.KubeScaleStream</mainClass>
                     </manifest>
                 </configuration>

@@ -1,4 +1,4 @@
-package KubeScale.Alert;
+package KubeScale.Events;
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,20 +18,20 @@ package KubeScale.Alert;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.errors.SerializationException;
-import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serializer;
 
 import java.util.Map;
 
-public class JsonPOJODeserializer<T> implements  Deserializer<T> {
-    private ObjectMapper objectMapper = new ObjectMapper();
+public class JsonPOJOSerializer<T> implements Serializer<T> {
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private Class<T> tClass;
 
     /**
      * Default constructor needed by Kafka
      */
-    public JsonPOJODeserializer() {
+    public JsonPOJOSerializer() {
+
     }
 
     @SuppressWarnings("unchecked")
@@ -41,24 +41,18 @@ public class JsonPOJODeserializer<T> implements  Deserializer<T> {
     }
 
     @Override
-    public T deserialize(String topic, byte[] bytes) {
-        if (bytes == null)
+    public byte[] serialize(String topic, T data) {
+        if (data == null)
             return null;
-
-        T data;
         try {
-            data = objectMapper.readValue(bytes, tClass);
+            return objectMapper.writeValueAsBytes(data);
         } catch (Exception e) {
-            throw new SerializationException(e);
+            throw new SerializationException("Error serializing JSON message", e);
         }
-
-        return data;
     }
 
     @Override
     public void close() {
-
     }
-
 
 }

@@ -32,21 +32,21 @@ public class KubeScaleStream {
 		StreamsBuilder builder = new StreamsBuilder();
 		KStream<String, TwampData> source = builder.stream("twamp", Consumed.with(Serdes.String(), TwampData.getSerde()));
 		
-		EventBuilder<Long> slaEvent = new EventBuilder<Long>(source, new Long(70), 
+		EventBuilder<Long> slaEvent = new EventBuilder<Long>(source, new Long(80), 
 			(value) -> {
 				int n = 0;
 				Iterator<TwampData> iterator= value.iterator();
 				while(iterator.hasNext()) {
 					Long es = iterator.next().es;
 					System.out.println(es);
-					if(100L-es <= 100L) n++;
+					if(100L-es <= 80L) n++;
 				}
 				return n >= 12;
 			},
 			"events");
 		slaEvent.setCategory("sla");
 		slaEvent.setThresholdExceedMessage("SLA threshold exceeded!");
-		slaEvent.setBelowThreholdMessage("SLA is now below 95%");
+		slaEvent.setBelowThreholdMessage("SLA is now below 80%");
 		slaEvent.build();
 		
 		EventBuilder<Double> delayEvent = new EventBuilder<Double>(source, 50.0, 

@@ -5,7 +5,7 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>SLA</name>
       <build>
-        <finalName>streams-test</finalName>
+        <finalName>event_streams</finalName>
 
         <plugins>
             <plugin>
@@ -15,6 +15,9 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                    <manifest>
+                    	<mainClass>KubeScale.Events.KubeScaleStream</mainClass>
+                    </manifest>
                 </configuration>
             </plugin>
        </plugins>

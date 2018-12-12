@@ -17,11 +17,11 @@ package KubeScale.Events;
  **/
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
-import org.apache.kafka.common.serialization.Serializer;
-
 import java.util.Map;
+
 
 public class JsonPOJODeserializer<T> implements  Deserializer<T> {
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -41,6 +41,7 @@ public class JsonPOJODeserializer<T> implements  Deserializer<T> {
     }
 
     @Override
+    
     public T deserialize(String topic, byte[] bytes) {
         if (bytes == null)
             return null;

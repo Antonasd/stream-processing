@@ -43,6 +43,7 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StreamsMetadata;
 import org.apache.kafka.streams.test.ConsumerRecordFactory;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 
 public class StreamsTest {

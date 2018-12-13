@@ -108,7 +108,7 @@ public class EventBuilder<T> {
 								if(state.thresholdExceeded.equals(tresholdExceeded)) {
 									state.hasChanged = false;
 								} else {
-									System.out.println("Event!");
+									System.out.println("Event triggered for stream: "+metaData.stream_id);
 									state.thresholdExceeded = tresholdExceeded;
 									state.hasChanged = true;
 								}

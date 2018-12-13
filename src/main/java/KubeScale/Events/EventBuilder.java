@@ -108,7 +108,6 @@ public class EventBuilder<T> {
 								if(state.thresholdExceeded.equals(tresholdExceeded)) {
 									state.hasChanged = false;
 								} else {
-									System.out.println("Event triggered for stream: "+metaData.stream_id);
 									state.thresholdExceeded = tresholdExceeded;
 									state.hasChanged = true;
 								}
@@ -131,7 +130,7 @@ public class EventBuilder<T> {
 		//Event error.
 		eventBranches[0]
 				.map((metaData, state) -> {
-					System.out.println("Constructing event with cat: "+category);
+					System.out.println("Creating error event for stream with id: "+metaData.stream_id);
 					return new KeyValue<String, Event<T>>(metaData.stream_id, 
 					new Event<T>(
 						DateTimeFormatter
@@ -143,12 +142,15 @@ public class EventBuilder<T> {
 		                thresholdExceededMessage,
 		                metaData
 						)
-					);})
+					);
+				})
 				.to(topic, Produced.<String, Event<T>>with(Serdes.String(), new EventSerde<T>(thresholdType)));
 		
 		//Event info (There is no longer an error).
 		eventBranches[1]
-				.map((metaData, state) -> new KeyValue<String, Event<T>>(metaData.stream_id, 
+				.map((metaData, state) -> {
+					System.out.println("Creating info event for stream with id: "+metaData.stream_id);
+					return new KeyValue<String, Event<T>>(metaData.stream_id, 
 					new Event<T>(
 						DateTimeFormatter
 							.ofPattern("yyyy-MM-dd'T'HH:mmX")
@@ -159,7 +161,8 @@ public class EventBuilder<T> {
 			            belowThresholdMessage,
 			            metaData
 						)
-					))
+					);
+				})
 				.to(topic, Produced.<String, Event<T>>with(Serdes.String(), new EventSerde<T>(thresholdType)));
 	}
 	

@@ -76,7 +76,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().davg >= 50.0) n++;
+						if(iterator.next().davg >= davg_threshold) n++;
 					}
 					return n >= 12;
 				},

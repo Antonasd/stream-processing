@@ -209,62 +209,54 @@ public class KubeScaleStream {
 		parser.addArgument("--sla")
 			  .dest("sla")
 			  .type(Long.class)
-			  .nargs(1)
 			  .setDefault(80L)
 			  .help("Threshold for SLA (percentage).");
 			
 		parser.addArgument("--davg")
 			  .dest("davg")
 			  .type(Double.class)
-			  .nargs(1)
 			  .setDefault(50.0)
 			  .help("Threshold for average delay.");
 		
 		parser.addArgument("--rate")
 			  .dest("rate")
 			  .type(Double.class)
-			  .nargs(1)
 			  .setDefault(50.0)
 			  .help("Threshold for the data rate.");
 		
 		parser.addArgument("--davg_far")
 			  .dest("davg_far")
 			  .type(Double.class)
-			  .nargs(1)
 			  .setDefault(50.0)
 			  .help("Threshold for average delay at the far end.");
 		
 		parser.addArgument("--loss_far")
 			  .dest("loss_far")
 			  .type(Long.class)
-			  .nargs(1)
 			  .setDefault(20L)
 			  .help("Threshold for packet loss percentage at the far end.");
 		
 		parser.addArgument("--miso_far")
 			  .dest("miso_far")
 			  .type(Long.class)
-			  .nargs(1)
 			  .setDefault(200L)
 			  .help("Threshold for the number of misordered packets at the far end.");
+		
 		parser.addArgument("--davg_near")
 			  .dest("davg_near")
 			  .type(Double.class)
-			  .nargs(1)
 			  .setDefault(50.0)
 			  .help("Threshold for average delay at the near end.");
 		
 		parser.addArgument("--loss_near")
 			  .dest("loss_near")
 			  .type(Long.class)
-			  .nargs(1)
 			  .setDefault(20L)
 			  .help("Threshold for packet loss percentage at the near end.");
 	
 		parser.addArgument("--miso_near")
 			  .dest("miso_near")
 			  .type(Long.class)
-			  .nargs(1)
 			  .setDefault(200L)
 			  .help("Threshold for the number of misordered packets at the near end.");
 		

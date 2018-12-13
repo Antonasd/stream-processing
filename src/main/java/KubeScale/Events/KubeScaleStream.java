@@ -61,7 +61,7 @@ public class KubeScaleStream {
 				Iterator<TwampData> iterator= value.iterator();
 				while(iterator.hasNext()) {
 					Long es = iterator.next().es;
-					if(100L-es <= 80L) n++;
+					if(100L-es <= sla_threshold) n++;
 				}
 				return n >= 12;
 			},
@@ -91,7 +91,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().rate <= 50.0) n++;
+						if(iterator.next().rate <= rate_threshold) n++;
 					}
 					return n >= 12;
 				},
@@ -106,14 +106,14 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().davg_far >= 50.0) n++;
+						if(iterator.next().davg_far >= davg_far_threshold) n++;
 					}
 					return n >= 12;
 				},
 				"events");
 		
 		davgFarEvent.setCategory("THRESHOLD_ALERT");
-		davgFarEvent.setThresholdExceedMessage("Far delay has exceeded "+davg_far_threshold+" ms!");
+		davgFarEvent.setThresholdExceedMessage("Average delay at the far end has exceeded "+davg_far_threshold+" ms!");
 		davgFarEvent.setBelowThreholdMessage("Average delay at the far end is now below "+davg_far_threshold+" ms.");
 		davgFarEvent.build();
 		
@@ -122,7 +122,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().loss_far >= 60L) n++;
+						if(iterator.next().loss_far >= loss_far) n++;
 					}
 					return n >= 12;
 				},
@@ -137,7 +137,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().loss_far >= 20L) n++;
+						if(iterator.next().loss_far >= miso_far) n++;
 					}
 					return n >= 12;
 				},
@@ -152,7 +152,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().davg_near >= 50.0) n++;
+						if(iterator.next().davg_near >= davg_near_threshold) n++;
 					}
 					return n >= 12;
 				},
@@ -167,7 +167,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().loss_far >= 60L) n++;
+						if(iterator.next().loss_far >= loss_near) n++;
 					}
 					return n >= 12;
 				},
@@ -182,7 +182,7 @@ public class KubeScaleStream {
 					int n = 0;
 					Iterator<TwampData> iterator= value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().loss_far >= 20L) n++;
+						if(iterator.next().loss_far >= miso_near) n++;
 					}
 					return n >= 12;
 				},

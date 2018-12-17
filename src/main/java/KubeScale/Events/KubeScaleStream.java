@@ -78,7 +78,7 @@ public class KubeScaleStream {
 					while(iterator.hasNext()) {
 						aggregated_delay += iterator.next().davg;
 					}
-					return davg_threshold >= aggregated_delay/6;
+					return davg_threshold <= aggregated_delay/6;
 				},
 				"events");
 		delayEvent.setCategory("THRESHOLD_ALERT");
@@ -198,7 +198,7 @@ public class KubeScaleStream {
 		KafkaStreams streams = new KafkaStreams(builder.build(), props);
         final CountDownLatch latch = new CountDownLatch(1);
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-        streams.cleanUp(); // dev only
+        //streams.cleanUp(); // dev only
         streams.start();
 		
 	}

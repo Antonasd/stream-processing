@@ -131,7 +131,7 @@ public class EventBuilder<T> {
 		//Event error.
 		eventBranches[0]
 				.map((metaData, state) -> {
-					System.out.println("Constructing event with cat: "+category);
+					System.out.println("Constructing error event with id: "+metaData.stream_id);
 					return new KeyValue<String, Event<T>>(metaData.stream_id, 
 					new Event<T>(
 						DateTimeFormatter
@@ -148,7 +148,9 @@ public class EventBuilder<T> {
 		
 		//Event info (There is no longer an error).
 		eventBranches[1]
-				.map((metaData, state) -> new KeyValue<String, Event<T>>(metaData.stream_id, 
+				.map((metaData, state) ->{
+					System.out.println("Constructing info event with id: "+metaData.stream_id);
+					return new KeyValue<String, Event<T>>(metaData.stream_id, 
 					new Event<T>(
 						DateTimeFormatter
 							.ofPattern("yyyy-MM-dd'T'HH:mmX")
@@ -159,7 +161,7 @@ public class EventBuilder<T> {
 			            belowThresholdMessage,
 			            metaData
 						)
-					))
+					);})
 				.to(topic, Produced.<String, Event<T>>with(Serdes.String(), new EventSerde<T>(thresholdType)));
 	}
 	

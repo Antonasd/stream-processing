@@ -55,7 +55,7 @@ public class KubeScaleStream {
 		StreamsBuilder builder = new StreamsBuilder();
 		KStream<String, TwampData> source = builder.stream("twamp", Consumed.with(Serdes.String(), TwampData.getSerde()));
 		
-		EventBuilder<Long> slaEvent = new EventBuilder<Long>(source, sla_threshold, 
+		/*EventBuilder<Long> slaEvent = new EventBuilder<Long>(source, sla_threshold, 
 			(value) -> {
 				int n = 0;
 				Iterator<TwampData> iterator= value.iterator();
@@ -69,23 +69,24 @@ public class KubeScaleStream {
 		slaEvent.setCategory("THRESHOLD_ALERT");
 		slaEvent.setThresholdExceedMessage("SLA is above "+sla_threshold+"%!");
 		slaEvent.setBelowThreholdMessage("SLA is now below "+sla_threshold+"%.");
-		slaEvent.build();
+		slaEvent.build();*/
 		
 		EventBuilder<Double> delayEvent = new EventBuilder<Double>(source, davg_threshold, 
 				(value) -> {
-					int n = 0;
-					Iterator<TwampData> iterator= value.iterator();
+					Double aggregated_delay = 0.00;
+					Iterator<TwampData> iterator = value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().davg >= 50.0) n++;
+						aggregated_delay += iterator.next().davg;
 					}
-					return n >= 12;
+					return davg_threshold >= aggregated_delay/6;
 				},
 				"events");
 		delayEvent.setCategory("THRESHOLD_ALERT");
-		delayEvent.setThresholdExceedMessage("Average delay has exceeded"+davg_threshold+" ms!");
+		delayEvent.setThresholdExceedMessage("Average delay has exceeded "+davg_threshold+" ms!");
 		delayEvent.setBelowThreholdMessage("Average delay is now below "+davg_threshold+" ms.");
+		delayEvent.setNumberOfPoints(6);
 		delayEvent.build();
-		
+		/*
 		EventBuilder<Double> rateEvent = new EventBuilder<Double>(source, rate_threshold, 
 				(value) -> {
 					int n = 0;
@@ -191,7 +192,7 @@ public class KubeScaleStream {
 		misoNearEvent.setThresholdExceedMessage("The number of missordered packets at the near end is exceeding "+miso_near+".");
 		misoNearEvent.setBelowThreholdMessage("The number of missordered packets at the near end is now below "+miso_near+".");
 		misoNearEvent.build();
-		
+		*/
 		//test(builder, props);
 		
 		KafkaStreams streams = new KafkaStreams(builder.build(), props);
@@ -215,7 +216,7 @@ public class KubeScaleStream {
 		parser.addArgument("--davg")
 			  .dest("davg")
 			  .type(Double.class)
-			  .setDefault(50.0)
+			  .setDefault(150.0)
 			  .help("Threshold for average delay.");
 		
 		parser.addArgument("--rate")
@@ -227,7 +228,7 @@ public class KubeScaleStream {
 		parser.addArgument("--davg_far")
 			  .dest("davg_far")
 			  .type(Double.class)
-			  .setDefault(50.0)
+			  .setDefault(150.0)
 			  .help("Threshold for average delay at the far end.");
 		
 		parser.addArgument("--loss_far")
@@ -245,7 +246,7 @@ public class KubeScaleStream {
 		parser.addArgument("--davg_near")
 			  .dest("davg_near")
 			  .type(Double.class)
-			  .setDefault(50.0)
+			  .setDefault(150.0)
 			  .help("Threshold for average delay at the near end.");
 		
 		parser.addArgument("--loss_near")

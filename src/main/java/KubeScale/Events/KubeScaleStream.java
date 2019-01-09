@@ -45,10 +45,11 @@ public class KubeScaleStream {
 		Double davg_near_threshold = event_args.getDouble("davg_near");
 		Long loss_near = event_args.getLong("loss_near");
 		Long miso_near = event_args.getLong("miso_near");
-			
+		String kafka_broker = event_args.getString("kafka-host");
+		
 		Properties props = new Properties();
 		props.put(StreamsConfig.APPLICATION_ID_CONFIG, "event_threshold_stream");
-		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "130.240.200.49:9092");
+		props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafka_broker);
 		props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 		props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.Long().getClass().getName());
 		
@@ -73,17 +74,19 @@ public class KubeScaleStream {
 		
 		EventBuilder<Double> delayEvent = new EventBuilder<Double>(source, davg_threshold, 
 				(value) -> {
-					int n = 0;
-					Iterator<TwampData> iterator= value.iterator();
+					Double aggregated_delay = 0.00;
+					Iterator<TwampData> iterator = value.iterator();
 					while(iterator.hasNext()) {
-						if(iterator.next().davg >= davg_threshold) n++;
+						aggregated_delay += iterator.next().davg;
 					}
-					return n >= 12;
+					System.out.println("Avg delay: "+aggregated_delay/6);
+					return davg_threshold <= (aggregated_delay/6);
 				},
 				"events");
 		delayEvent.setCategory("THRESHOLD_ALERT");
-		delayEvent.setThresholdExceedMessage("Average delay has exceeded"+davg_threshold+" ms!");
+		delayEvent.setThresholdExceedMessage("Average delay has exceeded "+davg_threshold+" ms!");
 		delayEvent.setBelowThreholdMessage("Average delay is now below "+davg_threshold+" ms.");
+		delayEvent.setNumberOfPoints(6);
 		delayEvent.build();
 		
 		EventBuilder<Double> rateEvent = new EventBuilder<Double>(source, rate_threshold, 
@@ -197,7 +200,7 @@ public class KubeScaleStream {
 		KafkaStreams streams = new KafkaStreams(builder.build(), props);
         final CountDownLatch latch = new CountDownLatch(1);
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-        streams.cleanUp(); // dev only
+        streams.cleanUp();
         streams.start();
 		
 	}
@@ -215,7 +218,7 @@ public class KubeScaleStream {
 		parser.addArgument("--davg")
 			  .dest("davg")
 			  .type(Double.class)
-			  .setDefault(50.0)
+			  .setDefault(150.0)
 			  .help("Threshold for average delay.");
 		
 		parser.addArgument("--rate")
@@ -227,7 +230,7 @@ public class KubeScaleStream {
 		parser.addArgument("--davg_far")
 			  .dest("davg_far")
 			  .type(Double.class)
-			  .setDefault(50.0)
+			  .setDefault(150.0)
 			  .help("Threshold for average delay at the far end.");
 		
 		parser.addArgument("--loss_far")
@@ -245,7 +248,7 @@ public class KubeScaleStream {
 		parser.addArgument("--davg_near")
 			  .dest("davg_near")
 			  .type(Double.class)
-			  .setDefault(50.0)
+			  .setDefault(150.0)
 			  .help("Threshold for average delay at the near end.");
 		
 		parser.addArgument("--loss_near")
@@ -259,6 +262,12 @@ public class KubeScaleStream {
 			  .type(Long.class)
 			  .setDefault(200L)
 			  .help("Threshold for the number of misordered packets at the near end.");
+		
+		parser.addArgument("--kafka-host")
+			  .dest("kafka-host")
+			  .type(String.class)
+			  .setDefault("localhost")
+			  .help("Address of kafka broker");
 		
 		return parser.parseArgs(args);
 	}

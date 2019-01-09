@@ -9,7 +9,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 
 public class State {
-	public Boolean hasChanged= false;
+	public Boolean hasChanged = false;
 	public Boolean thresholdExceeded;
 	
 	public State(){
